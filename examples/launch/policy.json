@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "arrays": [
+    { "path": "/configurations", "key": "name", "order": "ordered" }
+  ]
+}

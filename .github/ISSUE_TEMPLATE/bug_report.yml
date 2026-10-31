@@ -1,0 +1,31 @@
+name: Bug report
+description: Report an incorrect merge, diagnostic or rendering result.
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Version and platform
+      description: Output of jsonc-merge --version, plus your operating system.
+    validations:
+      required: true
+  - type: textarea
+    id: inputs
+    attributes:
+      label: Minimal reproducer
+      description: Provide base, ours, theirs, the policy if used, and the command. Keep comments and number spellings that affect the result.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+      description: Describe the expected merged value or conflict.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+      description: Include output or the complete diagnostic.
+    validations:
+      required: true

@@ -1,0 +1,7 @@
+{
+  "name": "jsonc-merge-independent-oracle",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Development-only independent JSONC output parser",
+  "dependencies": { "jsonc-parser": "3.3.1" }
+}

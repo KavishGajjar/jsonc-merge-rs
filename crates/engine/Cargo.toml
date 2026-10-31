@@ -1,0 +1,17 @@
+[package]
+name = "jsonc-merge"
+description = "Source-preserving JSONC merge plans with explicit record identities"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+jsonc-parser.workspace = true
+num-bigint.workspace = true
+
+[lints]
+workspace = true
+

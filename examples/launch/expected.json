@@ -1,0 +1,7 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    { "name": "Worker", "type": "node", "request": "launch", "program": "src/worker.js" },
+    { "name": "API", "type": "node", "request": "launch", "program": "dist/api.js" }
+  ]
+}
