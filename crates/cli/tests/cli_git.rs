@@ -201,6 +201,26 @@ fn diagnostics_do_not_panic_on_non_utf8_filenames() {
     use std::os::unix::ffi::OsStringExt;
     let temp = TempDir::new().unwrap();
     let name = std::ffi::OsString::from_vec(b"invalid-\xff.jsonc".to_vec());
+    // macOS rejects non-UTF-8 filenames at the filesystem boundary. A missing
+    // path still exercises the diagnostic without requiring such a file to exist.
+    let output = Command::new(binary())
+        .current_dir(temp.path())
+        .arg("check")
+        .arg(&name)
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(2));
+    let diagnostic: serde_json::Value = serde_json::from_slice(&output.stderr).unwrap();
+    assert_eq!(diagnostic["error"]["code"], "io");
+    assert_eq!(diagnostic["error"]["file"], name.to_string_lossy().as_ref());
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn existing_non_utf8_filenames_report_source_errors() {
+    use std::os::unix::ffi::OsStringExt;
+    let temp = TempDir::new().unwrap();
+    let name = std::ffi::OsString::from_vec(b"invalid-\xff.jsonc".to_vec());
     fs::write(temp.path().join(&name), "{bad").unwrap();
     let output = Command::new(binary())
         .current_dir(temp.path())
