@@ -9,6 +9,9 @@ Use Rust 1.95.0. Keep dependency updates separate from behavior changes and comm
 the Cargo lockfile. The original source is MIT licensed. New dependencies need a
 license inventory update. The core must remain free of filesystem, network,
 clock, subprocess and global mutable state.
+Release tooling uses Python 3.11 or newer with its standard library only. See
+[binary release checks and publication](docs/releasing.md) before changing
+packaging, supported targets or upload behavior.
 
 After dependencies are available, basic Rust checks need no network:
 

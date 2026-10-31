@@ -1,0 +1,10 @@
+// Project launch configurations. Names are the explicit record identities.
+{
+  "version": "0.2.0",
+  "configurations": [
+    // Run the background worker.
+    { "name": "Worker", "type": "node", "request": "launch", "program": "src/worker.js" },
+    // Start the API locally.
+    { "name": "API", "type": "node", "request": "launch", "program": "dist/api.js" }
+  ]
+}

@@ -33,6 +33,7 @@ assertions remain visible.
 | CLI/Git | Status categories, empty stdout on failure, no ordinary input writes, scratch-file replacement, symlink refusal and actual clean/conflicted Git merges |
 | Output parsing | 259 successful outputs checked with Microsoft `jsonc-parser` 3.3.1; the additional 128 generated cases also compare independently lexed comment tokens |
 | Installation/docs | Locked offline CLI installation, installed-binary version check, and README library example compiled as a doctest |
+| Binary releases | Version/tag guards, four archive formats/targets, architecture/dependency checks, manifests/checksums, traversal/link rejection, draft-only API writes and idempotent retries; native extracted-binary smoke checks run in the release matrix |
 
 The JavaScript parser is not used as a number-equality oracle beyond safe finite
 numbers; exact large-number behavior has Rust fixtures. The order oracle
@@ -69,8 +70,11 @@ latency or memory guarantee. Re-measure on the intended deployment hardware.
 
 ## Practical limits of this evidence
 
-The local baseline is Linux in Docker. The workflow also configures macOS/Windows
-Rust CI, but those remote jobs have not been run from this local checkout.
+Source CI for the v0.1.0 line passed Linux, macOS and Windows on
+[commit 5acc996](https://github.com/KavishGajjar/jsonc-merge-rs/actions/runs/41216318045).
+New binary-release changes require their own four-target hosted preview before
+tagging. Local Docker checks can exercise the Linux archive, not run Mac/Windows
+executables. Follow the [release procedure](releasing.md).
 There has been no independent user pilot, exhaustive proof, long-running fuzzing
 campaign or production deployment. Tests reduce risk; they cannot establish an
 absence of every possible defect. Publication and adoption remain separate work.

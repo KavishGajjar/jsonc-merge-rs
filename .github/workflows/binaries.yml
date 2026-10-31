@@ -1,0 +1,154 @@
+name: binary-release
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: binaries-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      version: ${{ steps.metadata.outputs.version }}
+      tag: ${{ steps.metadata.outputs.tag }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s scripts/tests -v
+      - id: metadata
+        run: python scripts/release.py metadata --github-output "$GITHUB_OUTPUT"
+
+  build:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: x86_64-unknown-linux-musl
+            binary: jsonc-merge
+            flags: ''
+            macos_minimum: ''
+          - os: macos-15
+            target: aarch64-apple-darwin
+            binary: jsonc-merge
+            flags: ''
+            macos_minimum: '13.0'
+          - os: macos-15-intel
+            target: x86_64-apple-darwin
+            binary: jsonc-merge
+            flags: ''
+            macos_minimum: '13.0'
+          - os: windows-2022
+            target: x86_64-pc-windows-msvc
+            binary: jsonc-merge.exe
+            flags: '-C target-feature=+crt-static -C link-arg=/Brepro'
+            macos_minimum: ''
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    env:
+      RUSTFLAGS: ${{ matrix.flags }}
+      MACOSX_DEPLOYMENT_TARGET: ${{ matrix.macos_minimum }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: 1.95.0
+          targets: ${{ matrix.target }}
+      # The Rust musl target supplies its C runtime. These dependencies need no
+      # native C builds; use rustc's default linker rather than musl-gcc wrappers.
+      - name: Fetch locked dependencies
+        env:
+          TARGET: ${{ matrix.target }}
+        run: cargo fetch --locked --target "$TARGET"
+      - name: Test the release target offline
+        env:
+          TARGET: ${{ matrix.target }}
+        run: cargo test --workspace --release --target "$TARGET" --locked --offline --no-fail-fast
+      - name: Build the CLI offline
+        env:
+          TARGET: ${{ matrix.target }}
+        run: cargo build -p jsonc-merge-cli --release --target "$TARGET" --locked --offline
+      - name: Package, inspect and run the extracted executable
+        env:
+          TARGET: ${{ matrix.target }}
+          BINARY: ${{ matrix.binary }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          python scripts/release.py package --target "$TARGET" --binary "target/$TARGET/release/$BINARY" --output dist
+          if [[ "$RUNNER_OS" == 'Windows' ]]; then extension=zip; else extension=tar.gz; fi
+          python scripts/release.py smoke "dist/jsonc-merge-v$VERSION-$TARGET.$extension"
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: binary-${{ matrix.target }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+
+  assemble:
+    needs: [prepare, build]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          pattern: binary-*
+          path: dist
+          merge-multiple: true
+      - run: python scripts/release.py aggregate dist
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: release-assets
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+
+  draft:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: [prepare, build, assemble]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: release-assets
+          path: dist
+      - name: Create the unpublished pre-release draft
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/draft_release.py dist

@@ -5,6 +5,7 @@ cd "$(dirname "$0")/.."
 evidence_dir="${EVIDENCE_DIR:-$(mktemp -d /tmp/jsonc-merge-verification.XXXXXX)}"
 mkdir -p "$evidence_dir"
 export EVIDENCE_DIR="$evidence_dir"
+export PYTHONDONTWRITEBYTECODE=1
 export CARGO_TARGET_DIR="${CARGO_TARGET_DIR:-$PWD/target}"
 cargo_args=(--locked --offline)
 if [[ -n "${CARGO_VENDOR_CONFIG:-}" ]]; then
@@ -19,6 +20,7 @@ cargo --version
 git --version
 node --version
 node scripts/source-hashes.test.cjs
+python3 -m unittest discover -s scripts/tests -v
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets "${cargo_args[@]}" -- -D warnings
 cargo test --workspace "${cargo_args[@]}" --no-fail-fast

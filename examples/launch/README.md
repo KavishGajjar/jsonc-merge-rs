@@ -12,5 +12,6 @@ cargo run -p jsonc-merge-cli -- merge \
   --policy examples/launch/policy.json
 ```
 
-`expected.json` specifies the result's JSON value. The JSONC output also retains
-the comments and uses ours as its presentation template.
+`expected.json` specifies the result's JSON value. `expected.jsonc` is the actual
+source-preserving output, including comments. The README demo and packaged binary
+checks both use this golden file.

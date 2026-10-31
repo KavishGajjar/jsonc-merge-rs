@@ -1,6 +1,17 @@
 # Changelog
 
-## 0.1.0 — local, unreleased
+## 0.1.1 — unreleased binary preview
+
+- Native binary packaging for Linux x64 musl, macOS Apple Silicon/Intel and
+  Windows x64 with static CRT, including checksums, examples and license notices.
+- Per-target release tests, executable architecture/dependency inspection and
+  smoke tests of the extracted archive before a draft pre-release is created.
+- Build-only previews on branches and pull requests; tag pushes create drafts
+  for manual owner publication. Existing published releases are not overwritten.
+- A checked README demo and complete binary/source installation instructions.
+- Upgrade checkout to its Node 24-based action revision.
+
+## 0.1.0 — 2026-10-31 (pre-release)
 
 - Immutable strict-profile JSONC documents, source spans and exact decimal values.
 - Three-way object merging, explicit ordered/unordered string-keyed record arrays,

@@ -4,34 +4,81 @@ A Rust library and command-line tool for three-way merges of commented JSON
 configuration. Give named records an explicit identity and merge their edits
 across reorders, without discarding their comments.
 
-For example, one branch can move a launch configuration while another changes its
-program. The result includes both changes. Competing values, deletion against an
-edit, incompatible comment changes and impossible record orders produce a
-structured conflict instead of a silent winner.
+[![verify](https://github.com/KavishGajjar/jsonc-merge-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/KavishGajjar/jsonc-merge-rs/actions/workflows/ci.yml)
 
-**v0.1.0, pre-release.** Build from source with the instructions below. This
-workspace has not been released to crates.io.
+## Reorder on one branch. Edit on the other.
 
-## Try it
+One branch moves **Worker** before **API**. Another changes the API program.
+Declare `name` as the record identity and keep both edits, with each comment
+still attached to its record:
 
-Requires Rust **1.95.0**. Git is required for the Git adapter tests; Node.js is
-required only for the independent development oracle. The Rust library and CLI
-do not require Node.js or network access at runtime.
+| Input | Configuration order | API program |
+| --- | --- | --- |
+| Base | API → Worker | `src/api.js` |
+| Ours | Worker → API | `src/api.js` |
+| Theirs | API → Worker | `dist/api.js` |
+| **Merged** | **Worker → API** | **`dist/api.js`** |
+
+<!-- demo-output:start -->
+```jsonc
+// Project launch configurations. Names are the explicit record identities.
+{
+  "version": "0.2.0",
+  "configurations": [
+    // Run the background worker.
+    { "name": "Worker", "type": "node", "request": "launch", "program": "src/worker.js" },
+    // Start the API locally.
+    { "name": "API", "type": "node", "request": "launch", "program": "dist/api.js" }
+  ]
+}
+```
+<!-- demo-output:end -->
+
+These are actual [example inputs](examples/launch/README.md), with a
+[checked expected output](examples/launch/expected.jsonc). Conflicting values,
+deletions against edits, incompatible comment changes and impossible record
+orders produce a structured conflict instead of a silent winner.
+
+## Download and try
+
+[Releases](https://github.com/KavishGajjar/jsonc-merge-rs/releases) are previews.
+**v0.1.0 is source-only.** Binary releases starting with **v0.1.1** package the
+executable, demo and notices for these targets after all native checks pass:
+
+| Platform | Archive target | Format |
+| --- | --- | --- |
+| Linux x64, static musl | `x86_64-unknown-linux-musl` | `.tar.gz` |
+| macOS Apple Silicon | `aarch64-apple-darwin` | `.tar.gz` |
+| macOS Intel | `x86_64-apple-darwin` | `.tar.gz` |
+| Windows x64, static CRT | `x86_64-pc-windows-msvc` | `.zip` |
+
+Download your archive and `SHA256SUMS` from the same release. Follow the
+[checksum and extraction instructions](docs/install.md), then run the example
+from the extracted directory:
 
 ```sh
-cargo build --release --locked
-target/release/jsonc-merge merge \
-  examples/launch/base.jsonc examples/launch/ours.jsonc examples/launch/theirs.jsonc \
-  --policy examples/launch/policy.json
+./jsonc-merge merge examples/launch/base.jsonc examples/launch/ours.jsonc examples/launch/theirs.jsonc --policy examples/launch/policy.json
 ```
 
-The [launch example](examples/launch/README.md) keeps a reordered worker before the
-API and changes the API's program, with the comments still attached to their
-records. Install the CLI from this local checkout with:
+In Windows PowerShell use `.\jsonc-merge.exe` in place of `./jsonc-merge`.
+No Rust, Python or Node.js installation is needed for a packaged executable.
+Git is required only for optional Git-driver integration. macOS/Windows downloads
+are not distributor-signed or notarized; see the installation guide.
+
+## Build from source
+
+Requires Rust **1.95.0**. From a new directory:
 
 ```sh
+git clone https://github.com/KavishGajjar/jsonc-merge-rs.git
+cd jsonc-merge-rs
 cargo install --path crates/cli --locked
+jsonc-merge --version
+jsonc-merge merge examples/launch/base.jsonc examples/launch/ours.jsonc examples/launch/theirs.jsonc --policy examples/launch/policy.json
 ```
+
+The workspace has not been released to crates.io. Node.js and Python are used
+only by development checks, not by the Rust library or CLI at runtime.
 
 ## Declare record identities
 

@@ -10,7 +10,7 @@ function walk(dir) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const file = path.join(dir, entry.name);
     if (entry.isDirectory()) {
-      if (['.git', 'target', 'node_modules'].includes(entry.name) || outputs.includes(file)) continue;
+      if (['.git', 'target', 'node_modules', '__pycache__', 'dist'].includes(entry.name) || outputs.includes(file)) continue;
       walk(file);
     } else if (entry.isFile() || entry.isSymbolicLink()) files.push(file);
   }
