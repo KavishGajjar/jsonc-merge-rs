@@ -99,7 +99,7 @@ jobs:
           python scripts/release.py package --target "$TARGET" --binary "target/$TARGET/release/$BINARY" --output dist
           if [[ "$RUNNER_OS" == 'Windows' ]]; then extension=zip; else extension=tar.gz; fi
           python scripts/release.py smoke "dist/jsonc-merge-v$VERSION-$TARGET.$extension"
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: binary-${{ matrix.target }}
           path: dist/*
@@ -123,7 +123,7 @@ jobs:
           path: dist
           merge-multiple: true
       - run: python scripts/release.py aggregate dist
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-assets
           path: dist/*
